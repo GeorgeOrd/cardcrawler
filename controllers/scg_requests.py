@@ -2,6 +2,7 @@ import re
 import time
 import random
 import requests
+import json
 from time import sleep
 from models.api_request import ApiRequest
 
@@ -65,7 +66,7 @@ class StacityGamesAPI():
                 card_dict['tags'].update({
                     'sku': card_sku
                 })
-                
+
             formatted_cardlist.append(card_dict)
 
         json_data = {
@@ -122,14 +123,16 @@ class StacityGamesAPI():
                     json=self.get_body_request(cardlist=self.cardlist)
                 )
                 json_response = response.json()
-                return json_response
+                # pass the current request dict to create the returned_dict
+                cards_dict = self.get_clean_dict(json_response)
+                return cards_dict
 
             except requests.RequestException as e:
                 if attemp == max_attemps:
                     return {
                         "error": f"{str(e)}"
                     }
-                # Exponential backoff to retry multiple  time
+                # Exponential backoff to retry multiple times thr request
                 time.sleep(2 ** attemp)
 
     def parse_cardname(self, name):
@@ -146,7 +149,7 @@ class StacityGamesAPI():
         # the parsing proccess is skipped
         if not coincidence:
             return (name, False)
-        
+
         original_cardname = coincidence.group(1)
         code = coincidence.group(2)
         number = coincidence.group(3).zfill(3)
@@ -159,7 +162,71 @@ class StacityGamesAPI():
         with the available quantity, the card version and it's price
         """
         try:
+            available_cards = []
+            unavailable_cards = []
             cardlist_data = source_dict.get("data", [])
+            
+            #First, we search all cards in response
+            for card in cardlist_data:
+                context = card.get('context', {})
+                term = context.get('term', False)
+                required_qty = context.get('qty', False)
+                error = card.get('error', {})
+                matches = card.get('matches', [])
+                card_details = {
+                    'name': term,
+                    'qty': required_qty
+                }
+                
+                #Prevent to check get info from cards with errors
+                if error or error == 'Out of stock':
+                    card_details.update({
+                        'error' : error
+                    })
+                    unavailable_cards.append(card_details)
+                    continue
+                
+                #Get all available matches for current card
+                all_matches = []
+                for match in matches:
+                    card_doc = match.get('Document', {})
+                    cardstate_details = card_doc.get('hawk_child_attributes', [])
+                    image = card_doc.get('image', [0])[0]
+                    match_detail = {
+                        'image' : image
+                    }
+                    #Get all conditions (near mint or played) from current card
+                    available_conditions = []
+                    for detail in cardstate_details:
+                        price = detail.get('price', [0])[0]
+                        price_sale = detail.get('price_sale', [0])[0]
+                        available_qty = detail.get('qty', [0])[0]
+                        condition = detail.get('condition', [''])[0]
+                        state_detail = {
+                            'current_price' : price,
+                            'discount_price' : price_sale,
+                            'available_qty': available_qty,
+                            'condition' : condition
+                        }
+                        available_conditions.append(state_detail)
+                    
+                    if available_conditions:
+                        match_detail.update({
+                            'conditions': available_conditions
+                        })
+
+                    all_matches.append(match_detail)
+                
+                card_details.update({
+                    'matches': all_matches
+                })
+                available_cards.append(card_details)
+                
+            #Return all cards 
+            return {
+                'available': available_cards,
+                'unavailable': unavailable_cards
+            }
         except Exception as e:
             return {
                 "error": f"{str(e)}"

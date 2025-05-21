@@ -1,5 +1,4 @@
-s.env
-test.py
-test1.py
+.env
+data.json
 scg_response.json
 __pycache__/

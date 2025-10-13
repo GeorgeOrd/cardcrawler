@@ -15,7 +15,10 @@ async def get_cardlist_prices(request: Request):
     1. Starcity Games
     2. Card Kingdom
     """
-    body_request = await request.json()
+    
+    #We must use async/await to prevent the event thread
+    #to be blocked by reading the json request
+    body_request = await request.json()  
     source_list = body_request.get('list', [])
     scg_api.cardlist = source_list
     bdy = scg_api.get_cardlist()

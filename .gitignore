@@ -2,3 +2,4 @@
 data.json
 scg_response.json
 __pycache__/
+.vscode/

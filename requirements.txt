@@ -1,3 +1,5 @@
 fastapi[standard]>=0.112.0,<0.113.0
 requests
 fake_useragent
+uvicorn
+aiohttp

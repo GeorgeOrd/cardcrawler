@@ -80,21 +80,13 @@ class StacityGamesAPI():
                 'availability': [
                     'Available',
                 ],
-                'condition': [
-                    'NM',
-                    'PL',
-                ],
+                'condition': [],
                 'filter_set': [],
-                'finish': [
-                    'Non-foil',
-                    'Foil'
-                ],
+                'finish': 'ANY',
                 'variant_instockonly': [
                     'Yes',
                 ],
-                'variant_language': [
-                    'EN',
-                ],
+                'variant_language': 'EN',
                 'tournament_legality': [
                     'Legal',
                 ],
@@ -114,13 +106,15 @@ class StacityGamesAPI():
             try:
                 # create a session
                 scg_session = requests.Session()
+                scg_session.headers.update(self.get_scg_headers_request())
+                print(scg_session)
                 # set a delay
                 time.sleep(random.uniform(1, 3))
                 # get all scg available options for specified cards
                 response = scg_session.post(
                     self.base_url,
-                    headers=self.get_scg_headers_request(),
-                    json=self.get_body_request(cardlist=self.cardlist)
+                    headers = self.get_scg_headers_request(),
+                    json= self.get_body_request(cardlist=self.cardlist)
                 )
                 json_response = response.json()
                 # pass the current request dict to create the returned_dict
@@ -132,7 +126,7 @@ class StacityGamesAPI():
                     return {
                         "error": f"{str(e)}"
                     }
-                # Exponential backoff to retry multiple times thr request
+                # Exponential backoff to retry multiple times the request
                 time.sleep(2 ** attemp)
 
     def parse_cardname(self, name):

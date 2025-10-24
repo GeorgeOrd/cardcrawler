@@ -5,6 +5,7 @@ import requests
 import json
 from time import sleep
 from models.api_request import ApiRequest
+from data.json_dicts.scg_dicts import scg_headers, scg_body
 
 api_request = ApiRequest()
 
@@ -17,36 +18,31 @@ class StacityGamesAPI():
         self.max_attemps = max_attemps
 
     def get_scg_headers_request(self):
+        """
+        Must update the original headers dict to create
+        a random user-agent to emulate the original behaviour
+        of a browser request
+        """
         scg_agent = api_request.get_user_agent()
-        headers = {
-            'Accept': '*/*',
-            'Accept-Language': 'es-ES,es;q=0.8,en-US;q=0.5,en;q=0.3',
-            'Referer': 'https://starcitygames.com/',
-            'Content-Type': 'application/json',
-            'Origin': 'https://starcitygames.com',
-            'Connection': 'keep-alive',
-            'Sec-Fetch-Dest': 'empty',
-            'Sec-Fetch-Mode': 'cors',
-            'Sec-Fetch-Site': 'same-site',
-            'DNT': '1',
-            'Sec-GPC': '1',
-            'Priority': 'u=4',
-        }
-        headers.update(scg_agent)
-        return headers
+        scg_headers.update(scg_agent)
+        return scg_headers
 
     def get_body_request(self, cardlist):
         """
-        Create a dict to search all cards 
-        and all of its variants available
-        ex.
+        Given an array of dicts with information about
+        each card, they are adapted to the 
+        format required by the request.
+
+        FROM THIS.
+
+        TO THIS
         {
             'qty': 1,
             'term': '',#cardname
             'setCode': '',
             'setNames': [],
             'tags': {
-                'sku': '', #sgl-mtg-ema-49-enn
+                'sku': '', #sgl-mtg-<exp name(3 letters)>-<cardnumber>-<lang>
             },
         }
         """
@@ -69,32 +65,8 @@ class StacityGamesAPI():
 
             formatted_cardlist.append(card_dict)
 
-        json_data = {
-            'metadata': {
-                'department': 'mtg',
-            },
-            'options': {
-                'mode': 'manual',
-            },
-            'filters': {
-                'availability': [
-                    'Available',
-                ],
-                'condition': [],
-                'filter_set': [],
-                'finish': 'ANY',
-                'variant_instockonly': [
-                    'Yes',
-                ],
-                'variant_language': 'EN',
-                'tournament_legality': [
-                    'Legal',
-                ],
-            },
-            'data': formatted_cardlist,
-        }
-
-        return json_data
+        scg_body.update({'data': formatted_cardlist})
+        return scg_body
 
     def get_cardlist(self):
         """
@@ -107,13 +79,11 @@ class StacityGamesAPI():
                 # create a session
                 scg_session = requests.Session()
                 scg_session.headers.update(self.get_scg_headers_request())
-                print(scg_session)
                 # set a delay
                 time.sleep(random.uniform(1, 3))
                 # get all scg available options for specified cards
                 response = scg_session.post(
                     self.base_url,
-                    headers = self.get_scg_headers_request(),
                     json= self.get_body_request(cardlist=self.cardlist)
                 )
                 json_response = response.json()

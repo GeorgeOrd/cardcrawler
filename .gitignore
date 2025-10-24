@@ -1,5 +1,6 @@
+__pycache__/
+.vscode/
 .env
 data.json
 scg_response.json
-__pycache__/
-.vscode/
+test.py

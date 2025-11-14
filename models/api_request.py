@@ -6,8 +6,6 @@ class ApiRequest():
     Multiple api requests
     """
 
-    # def __init__(self):
-
     def get_user_agent(self):
         """
         Create a random user agent to prevent IP ban in requests

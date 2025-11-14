@@ -1,5 +1,9 @@
 fastapi[standard]>=0.112.0,<0.113.0
 requests
-fake_useragent
+fake-useragent
 uvicorn
 aiohttp
+PyJWT
+python-dotenv
+pwdlib[argon2]
+pydantic

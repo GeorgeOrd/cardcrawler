@@ -1,16 +1,17 @@
 
 from fastapi import Request, APIRouter, Depends, HTTPException
+from fastapi.responses import JSONResponse
 from src.external_services.scg_requests import StacityGamesAPI
 from src.core.config import settings
 
 router = APIRouter(
     tags=["scg_requests"],
-    responses={404: {"description": "Not found"}},
+    responses={404: {"description": "Content not found"}},
 )
 
 scg_api = StacityGamesAPI(base_url=settings.SCG_URL, cardlist=[], max_attemps=settings.max_attemps)
 
-@router.post("/cardlist/get_prices")
+@router.post("/scg/cardlist/get_prices")
 async def get_cardlist_prices(request: Request):
     """
     Search all cards specified in list in the following pages
@@ -24,4 +25,4 @@ async def get_cardlist_prices(request: Request):
     source_list = body_request.get('list', [])
     scg_api.cardlist = source_list
     bdy = scg_api.get_cardlist()
-    return bdy
+    return JSONResponse(content=bdy)

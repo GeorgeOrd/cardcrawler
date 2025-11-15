@@ -5,7 +5,6 @@ import requests
 from time import sleep
 from src.utils.api import ApiUtils
 from data.json_dicts.scg_dicts import scg_headers, scg_body
-
 utils = ApiUtils()
 
 
@@ -73,27 +72,31 @@ class StacityGamesAPI():
         and get all specified cards and their prices
         """
         max_attemps = self.max_attemps
-        for attemp in range(max_attemps):
+        for attemp in range(max_attemps, max_attemps + 1):
             try:
                 # create a session
                 scg_session = requests.Session()
                 scg_session.headers.update(self.get_scg_headers_request())
                 # set a delay
-                time.sleep(random.uniform(1, 3))
+                sleep(random.uniform(1, 3))
                 # get all scg available options for specified cards
                 response = scg_session.post(
                     self.base_url,
                     json=self.get_body_request(cardlist=self.cardlist)
                 )
+                if response.status_code != 200:
+                    raise requests.RequestException(
+                        f"SCG request failed with status code {response.status_code}"
+                    )
                 json_response = response.json()
-                # pass the current request dict to create the returned_dict
+                # pass the current request dict to create a clean version of it
                 cards_dict = self.get_clean_dict(json_response)
-                return cards_dict
 
+                return cards_dict
             except requests.RequestException as e:
                 if attemp == max_attemps:
                     return {
-                        "error": f"{str(e)}"
+                        "description": f"{str(e)}"
                     }
                 # Exponential backoff to retry multiple times the request
                 time.sleep(2 ** attemp)

@@ -4,10 +4,10 @@ import random
 import requests
 import json
 from time import sleep
-from models.api_request import ApiRequest
+from src.utils.api import ApiUtils
 from data.json_dicts.scg_dicts import scg_headers, scg_body
 
-api_request = ApiRequest()
+utils = ApiUtils()
 
 
 class StacityGamesAPI():
@@ -23,7 +23,7 @@ class StacityGamesAPI():
         a random user-agent to emulate the original behaviour
         of a browser request
         """
-        scg_agent = api_request.get_user_agent()
+        scg_agent = utils.get_user_agent()
         scg_headers.update(scg_agent)
         return scg_headers
 
@@ -84,7 +84,7 @@ class StacityGamesAPI():
                 # get all scg available options for specified cards
                 response = scg_session.post(
                     self.base_url,
-                    json= self.get_body_request(cardlist=self.cardlist)
+                    json=self.get_body_request(cardlist=self.cardlist)
                 )
                 json_response = response.json()
                 # pass the current request dict to create the returned_dict
@@ -129,8 +129,8 @@ class StacityGamesAPI():
             available_cards = []
             unavailable_cards = []
             cardlist_data = source_dict.get("data", [])
-            
-            #First, we search all cards in response
+
+            # First, we search all cards in response
             for card in cardlist_data:
                 context = card.get('context', {})
                 term = context.get('term', False)
@@ -141,25 +141,26 @@ class StacityGamesAPI():
                     'name': term,
                     'qty': required_qty
                 }
-                
-                #Prevent to check get info from cards with errors
+
+                # Prevent to check get info from cards with errors
                 if error or error == 'Out of stock':
                     card_details.update({
-                        'error' : error
+                        'error': error
                     })
                     unavailable_cards.append(card_details)
                     continue
-                
-                #Get all available matches for current card
+
+                # Get all available matches for current card
                 all_matches = []
                 for match in matches:
                     card_doc = match.get('Document', {})
-                    cardstate_details = card_doc.get('hawk_child_attributes', [])
+                    cardstate_details = card_doc.get(
+                        'hawk_child_attributes', [])
                     image = card_doc.get('image', [0])[0]
                     match_detail = {
-                        'image' : image
+                        'image': image
                     }
-                    #Get all conditions (near mint or played) from current card
+                    # Get all conditions (near mint or played) from current card
                     available_conditions = []
                     for detail in cardstate_details:
                         price = detail.get('price', [0])[0]
@@ -167,26 +168,26 @@ class StacityGamesAPI():
                         available_qty = detail.get('qty', [0])[0]
                         condition = detail.get('condition', [''])[0]
                         state_detail = {
-                            'current_price' : price,
-                            'discount_price' : price_sale,
+                            'current_price': price,
+                            'discount_price': price_sale,
                             'available_qty': available_qty,
-                            'condition' : condition
+                            'condition': condition
                         }
                         available_conditions.append(state_detail)
-                    
+
                     if available_conditions:
                         match_detail.update({
                             'conditions': available_conditions
                         })
 
                     all_matches.append(match_detail)
-                
+
                 card_details.update({
                     'matches': all_matches
                 })
                 available_cards.append(card_details)
-                
-            #Return all cards 
+
+            # Return all cards
             return {
                 'available': available_cards,
                 'unavailable': unavailable_cards

@@ -1,10 +1,7 @@
 from fake_useragent import UserAgent
 
 
-class ApiRequest():
-    """
-    Multiple api requests
-    """
+class ApiUtils():
 
     def get_user_agent(self):
         """
@@ -21,5 +18,3 @@ class ApiRequest():
         }
 
         return headers
-
-

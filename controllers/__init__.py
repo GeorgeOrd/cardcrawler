@@ -1,1 +1,0 @@
-from .scg_requests import StacityGamesAPI

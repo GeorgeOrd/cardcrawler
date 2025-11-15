@@ -1,13 +1,7 @@
-import os
-# from dotenv import load_dotenv
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
-# from app.external_services.scg_requests import StacityGamesAPI
 from src.core.config import settings
 from src.routers.main import api_router
-# load_dotenv()
-# scg_url = os.getenv("SCG_URL")
-# allow_origins = os.getenv("ALLOW_ORIGINS")
 
 app = FastAPI(
     title=settings.app_name,
@@ -27,4 +21,3 @@ app.include_router(
     api_router,
     prefix=settings.api_prefix
 )
-

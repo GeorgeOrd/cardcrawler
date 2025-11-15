@@ -1,11 +1,19 @@
 import re
-import time
 import random
 import requests
+import logging
 from time import sleep
 from src.utils.api import ApiUtils
 from data.json_dicts.scg_dicts import scg_headers, scg_body
 utils = ApiUtils()
+
+logging.basicConfig(
+    level=logging.INFO,
+    format="%(asctime)s - %(name)s - %(levelname)s - %(message)s",
+    datefmt="%Y-%m-%d %H:%M:%S"
+)
+
+logger = logging.getLogger(__name__)
 
 
 class StacityGamesAPI():
@@ -72,7 +80,9 @@ class StacityGamesAPI():
         and get all specified cards and their prices
         """
         max_attemps = self.max_attemps
-        for attemp in range(max_attemps, max_attemps + 1):
+
+        for attemp in range(max_attemps):
+            logger.info(f"SCG Request attemp {attemp +1} of {max_attemps}")
             try:
                 # create a session
                 scg_session = requests.Session()
@@ -89,17 +99,19 @@ class StacityGamesAPI():
                         f"SCG request failed with status code {response.status_code}"
                     )
                 json_response = response.json()
+                logger.info(f"SCG Request successful, status code {response.status_code}")
                 # pass the current request dict to create a clean version of it
                 cards_dict = self.get_clean_dict(json_response)
 
                 return cards_dict
             except requests.RequestException as e:
-                if attemp == max_attemps:
+                logger.error(f"SCG Request error: {str(e)}")
+                if attemp + 1 == max_attemps:
                     return {
                         "description": f"{str(e)}"
                     }
                 # Exponential backoff to retry multiple times the request
-                time.sleep(2 ** attemp)
+                sleep(2 ** attemp)
 
     def parse_cardname(self, name):
         """

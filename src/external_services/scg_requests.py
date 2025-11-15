@@ -2,7 +2,6 @@ import re
 import time
 import random
 import requests
-import json
 from time import sleep
 from src.utils.api import ApiUtils
 from data.json_dicts.scg_dicts import scg_headers, scg_body

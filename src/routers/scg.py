@@ -1,8 +1,9 @@
 
-from fastapi import Request, APIRouter, Depends, HTTPException
+from fastapi import Request, APIRouter, Depends
 from fastapi.responses import JSONResponse
 from src.external_services.scg_requests import StacityGamesAPI
 from src.core.config import settings
+from src.utils.rate_limiter import RateLimiter
 
 router = APIRouter(
     tags=["scg_requests"],
@@ -11,7 +12,7 @@ router = APIRouter(
 
 scg_api = StacityGamesAPI(base_url=settings.SCG_URL, cardlist=[], max_attemps=settings.max_attemps)
 
-@router.post("/scg/cardlist/get_prices")
+@router.post("/scg/cardlist/get_prices", dependencies=[Depends(RateLimiter(requests_limit=100, time_window=60))])
 async def get_cardlist_prices(request: Request):
     """
     Search all cards specified in list in the following pages

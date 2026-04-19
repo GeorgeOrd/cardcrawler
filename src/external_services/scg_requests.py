@@ -157,7 +157,7 @@ class StacityGamesAPI():
                 }
 
                 # Prevent to check get info from cards with errors
-                if error or error == 'Out of stock':
+                if error or error in ['Out of stock']:
                     card_details.update({
                         'error': error
                     })
@@ -187,7 +187,8 @@ class StacityGamesAPI():
                             'available_qty': available_qty,
                             'condition': condition
                         }
-                        available_conditions.append(state_detail)
+                        if available_qty > 0:
+                            available_conditions.append(state_detail)
 
                     if available_conditions:
                         match_detail.update({

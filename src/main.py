@@ -8,13 +8,14 @@ app = FastAPI(
     description="API to get card prices from different TCG vendors",
     version="0.1.0",
 )
+origins = [settings.ALLOWED_ORIGINS]
 
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=settings.ALLOW_ORIGINS,
+    allow_origins=origins,
     allow_credentials=True,
-    allow_methods=["*"],
-    allow_headers=["*"],
+    allow_methods=["GET", "POST", "OPTIONS"],
+    allow_headers=["Access-Control-Allow-Origin", "Content-Type"],
 )
 
 app.include_router(
